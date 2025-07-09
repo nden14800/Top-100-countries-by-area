@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面積の大きい国トップ100</title>
+    <!-- RobotoフォントをGoogle Fontsからインポート -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- ApexChartsライブラリをCDNからインポート -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        /* デフォルト（ライトテーマ）のスタイル */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7fa; /* ライトテーマの背景色 */
+            color: #333; /* ライトテーマの文字色 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #chart-container {
+            background-color: #ffffff; /* ライトテーマのコンテナ背景色 */
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px; /* チャートの最大幅 */
+            box-sizing: border-box;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        /* ダークテーマのスタイル */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a202c; /* ダークテーマの背景色 */
+                color: #e2e8f0; /* ダークテーマの文字色 */
+            }
+
+            #chart-container {
+                background-color: #2d3748; /* ダークテーマのコンテナ背景色 */
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        /* ApexChartsのツールチップのフォントをRobotoに設定 */
+        .apexcharts-tooltip {
+            font-family: 'Roboto', sans-serif !important;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            #chart-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chart-container">
+        <div id="chart"></div>
+    </div>
+
+    <script>
+        // 面積の大きい国トップ100のデータ
+        const countryData = [
+            { name: 'ロシア', area: 17098242 },
+            { name: '南極', area: 14200000 }, // 南極は国ではないが、データソースに含まれるため含める
+            { name: 'カナダ', area: 9984670 },
+            { name: 'アメリカ合衆国', area: 9833517 },
+            { name: '中国', area: 9596960 },
+            { name: 'ブラジル', area: 8515770 },
+            { name: 'オーストラリア', area: 7741220 },
+            { name: 'インド', area: 3287263 },
+            { name: 'アルゼンチン', area: 2780400 },
+            { name: 'カザフスタン', area: 2724900 },
+            { name: 'アルジェリア', area: 2381740 },
+            { name: 'コンゴ民主共和国', area: 2344858 },
+            { name: 'グリーンランド', area: 2166086 },
+            { name: 'サウジアラビア', area: 2149690 },
+            { name: 'メキシコ', area: 1964375 },
+            { name: 'インドネシア', area: 1904569 },
+            { name: 'スーダン', area: 1861484 },
+            { name: 'リビア', area: 1759540 },
+            { name: 'イラン', area: 1648195 },
+            { name: 'モンゴル', area: 1564116 },
+            { name: 'ペルー', area: 1285216 },
+            { name: 'チャド', area: 1284000 },
+            { name: 'ニジェール', area: 1267000 },
+            { name: 'アンゴラ', area: 1246700 },
+            { name: 'マリ', area: 1240192 },
+            { name: '南アフリカ', area: 1219090 },
+            { name: 'コロンビア', area: 1138910 },
+            { name: 'エチオピア', area: 1104300 },
+            { name: 'ボリビア', area: 1098581 },
+            { name: 'モーリタニア', area: 1030700 },
+            { name: 'エジプト', area: 1001450 },
+            { name: 'タンザニア', area: 947300 },
+            { name: 'ナイジェリア', area: 923768 },
+            { name: 'ベネズエラ', area: 912050 },
+            { name: 'ナミビア', area: 824292 },
+            { name: 'モザンビーク', area: 799380 },
+            { name: 'パキスタン', area: 796095 },
+            { name: 'トルコ', area: 783562 },
+            { name: 'チリ', area: 756102 },
+            { name: 'ザンビア', area: 752618 },
+            { name: 'モロッコ', area: 716550 },
+            { name: 'ミャンマー', area: 676578 },
+            { name: 'アフガニスタン', area: 652230 },
+            { name: '南スーダン', area: 644329 },
+            { name: 'フランス', area: 643801 },
+            { name: 'ソマリア', area: 637657 },
+            { name: '中央アフリカ共和国', area: 622984 },
+            { name: 'ウクライナ', area: 603550 },
+            { name: 'マダガスカル', area: 587041 },
+            { name: 'ボツワナ', area: 581730 },
+            { name: 'ケニア', area: 580367 },
+            { name: 'イエメン', area: 527968 },
+            { name: 'タイ', area: 513120 },
+            { name: 'スペイン', area: 505370 },
+            { name: 'トルクメニスタン', area: 488100 },
+            { name: 'カメルーン', area: 475440 },
+            { name: 'パプアニューギニア', area: 462840 },
+            { name: 'スウェーデン', area: 450295 },
+            { name: 'ウズベキスタン', area: 447400 },
+            { name: 'イラク', area: 438317 },
+            { name: 'パラグアイ', area: 406752 },
+            { name: 'ジンバブエ', area: 390757 },
+            { name: '日本', area: 377915 },
+            { name: 'ドイツ', area: 357022 },
+            { name: 'コンゴ共和国', area: 342000 },
+            { name: 'フィンランド', area: 338145 },
+            { name: 'ベトナム', area: 331210 },
+            { name: 'マレーシア', area: 329847 },
+            { name: 'ノルウェー', area: 323802 },
+            { name: 'コートジボワール', area: 322463 },
+            { name: 'ポーランド', area: 312685 },
+            { name: 'オマーン', area: 309500 },
+            { name: 'イタリア', area: 301340 },
+            { name: 'フィリピン', area: 300000 },
+            { name: 'エクアドル', area: 283561 },
+            { name: 'ブルキナファソ', area: 274200 },
+            { name: 'ニュージーランド', area: 268838 },
+            { name: 'ガボン', area: 267667 },
+            { name: 'ギニア', area: 245857 },
+            { name: 'イギリス', area: 243610 },
+            { name: 'ウガンダ', area: 241038 },
+            { name: 'ガーナ', area: 238533 },
+            { name: 'ルーマニア', area: 238391 },
+            { name: 'ラオス', area: 236800 },
+            { name: 'ガイアナ', area: 214969 },
+            { name: 'ベラルーシ', area: 207600 },
+            { name: 'キルギス', area: 199951 },
+            { name: 'セネガル', area: 196722 },
+            { name: 'シリア', area: 187437 },
+            { name: 'カンボジア', area: 181035 },
+            { name: 'ウルグアイ', area: 176215 },
+            { name: 'スリナム', area: 163820 },
+            { name: 'チュニジア', area: 163610 },
+            { name: 'バングラデシュ', area: 148460 },
+            { name: 'ネパール', area: 147181 },
+            { name: 'タジキスタン', area: 144100 },
+            { name: 'ギリシャ', area: 131957 },
+            { name: 'ニカラグア', area: 130370 },
+            { name: '北朝鮮', area: 120538 },
+            { name: 'マラウイ', area: 118484 }
+        ];
+
+
+        // 面積で降順にソート (すでにソートされているが念のため)
+        countryData.sort((a, b) => b.area - a.area);
+
+        // チャートのカテゴリとデータを作成
+        const categories = countryData.map(country => country.name);
+        const seriesData = countryData.map(country => country.area);
+
+        // 現在のデバイスのテーマを取得
+        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // ApexChartsのオプション設定
+        const chartOptions = {
+            series: [{
+                name: '面積',
+                data: seriesData
+            }],
+            chart: {
+                type: 'bar',
+                height: 3000, // トップ100の国を表示するために高さを調整
+                toolbar: {
+                    show: false // ツールバーを非表示
+                },
+                background: 'transparent', // 背景を透明に設定
+                fontFamily: 'Roboto, sans-serif', // チャート全体のフォント
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: true, // 横棒グラフ
+                    dataLabels: {
+                        position: 'top', // データラベルを棒の上に表示
+                    },
+                    borderRadius: 5, // 棒の角を丸くする
+                    barHeight: '70%', // 棒の太さ
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) {
+                    // 数値をカンマ区切りにし、' km²' を追加
+                    return val.toLocaleString() + ' km²';
+                },
+                style: {
+                    fontSize: '12px',
+                    colors: [isDarkMode ? '#e2e8f0' : '#333'] // データラベルの色をテーマに合わせて変更
+                },
+                offsetX: 40 // データラベルのオフセット
+            },
+            xaxis: {
+                categories: categories,
+                title: {
+                    text: '面積 (km²)',
+                    style: {
+                        color: isDarkMode ? '#e2e8f0' : '#333', // X軸タイトルの色
+                        fontSize: '14px',
+                        fontWeight: 700,
+                    }
+                },
+                labels: {
+                    formatter: function (val) {
+                        return val.toLocaleString(); // X軸のラベルをカンマ区切りに
+                    },
+                    style: {
+                        colors: isDarkMode ? '#e2e8f0' : '#333', // X軸ラベルの色
+                        fontSize: '12px',
+                    }
+                },
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                }
+            },
+            yaxis: {
+                title: {
+                    text: '国',
+                    style: {
+                        color: isDarkMode ? '#e2e8f0' : '#333', // Y軸タイトルの色
+                        fontSize: '14px',
+                        fontWeight: 700,
+                    }
+                },
+                labels: {
+                    style: {
+                        colors: isDarkMode ? '#e2e8f0' : '#333', // Y軸ラベルの色
+                        fontSize: '12px',
+                    }
+                }
+            },
+            grid: {
+                show: true,
+                borderColor: isDarkMode ? '#4a5568' : '#e0e0e0', // グリッド線の色
+                strokeDashArray: 4,
+                position: 'back',
+                xaxis: {
+                    lines: {
+                        show: true
+                    }
+                },
+                yaxis: {
+                    lines: {
+                        show: false // Y軸のグリッド線を非表示
+                    }
+                },
+                padding: {
+                    left: 20,
+                    right: 60 // データラベルが見えるように右側にパディングを追加
+                }
+            },
+            title: {
+                text: '面積の大きい国トップ100', // タイトルをトップ100に更新
+                align: 'center',
+                margin: 20,
+                style: {
+                    fontSize: '20px',
+                    fontWeight: 'bold',
+                    color: isDarkMode ? '#e2e8f0' : '#333', // タイトルの色
+                }
+            },
+            tooltip: {
+                theme: isDarkMode ? 'dark' : 'light', // ツールチップのテーマ
+                x: {
+                    show: false
+                },
+                y: {
+                    formatter: function (val) {
+                        return val.toLocaleString() + ' km²';
+                    }
+                }
+            },
+            fill: {
+                opacity: 1,
+                colors: ['#4CAF50'] // 棒の色
+            },
+            states: {
+                hover: {
+                    filter: {
+                        type: 'lighten',
+                        value: 0.15,
+                    }
+                },
+                active: {
+                    filter: {
+                        type: 'none'
+                    }
+                }
+            },
+            theme: {
+                mode: isDarkMode ? 'dark' : 'light', // チャートのテーマモード
+                palette: 'palette1' // カラーパレット
+            }
+        };
+
+        // チャートを初期化してレンダリング
+        const chart = new ApexCharts(document.querySelector("#chart"), chartOptions);
+        chart.render();
+
+        // デバイスのテーマ変更をリッスンし、チャートを更新
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            const newIsDarkMode = e.matches;
+            chart.updateOptions({
+                dataLabels: {
+                    style: {
+                        colors: [newIsDarkMode ? '#e2e8f0' : '#333']
+                    }
+                },
+                xaxis: {
+                    title: {
+                        style: {
+                            color: newIsDarkMode ? '#e2e8f0' : '#333'
+                        }
+                    },
+                    labels: {
+                        style: {
+                            colors: newIsDarkMode ? '#e2e8f0' : '#333'
+                        }
+                    }
+                },
+                yaxis: {
+                    title: {
+                        style: {
+                            color: newIsDarkMode ? '#e2e8f0' : '#333'
+                        }
+                    },
+                    labels: {
+                        style: {
+                            colors: newIsDarkMode ? '#e2e8f0' : '#333'
+                        }
+                    }
+                },
+                grid: {
+                    borderColor: newIsDarkMode ? '#4a5568' : '#e0e0e0'
+                },
+                title: {
+                    style: {
+                        color: newIsDarkMode ? '#e2e8f0' : '#333'
+                    }
+                },
+                tooltip: {
+                    theme: newIsDarkMode ? 'dark' : 'light'
+                },
+                theme: {
+                    mode: newIsDarkMode ? 'dark' : 'light'
+                }
+            });
+        });
+    </script>
+</body>
+</html>
